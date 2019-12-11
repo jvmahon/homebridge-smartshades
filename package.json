@@ -1,21 +1,25 @@
 {
-  "name": "NEO Smart Shade Control",
+  "name": "smartshades",
   "version": "0.0.1",
-  "description": "NEO Smart Plugin for homebridge",
+  "description": "SmartShades Plugin for homebridge: https://github.com/jvmahon/smartshades",
+  "license": "ISC",
   "keywords": [
     "homebridge-plugin",
-    "homebridge-NEOSmart"
+    "homebridge-smartshades"
   ],
   "repository": "github:jvmahon/smartshades",
   
+  "bugs": {
+    "url": "https://github.com/jvmahon/smartshades/issues"
+  },
   "engines": {
     "node": ">=12.0.0",
     "homebridge": ">=0.4.50"
   },
   "dependencies": {
-    "chalk": ">=3.0.0",
-    "hap-nodejs": ">=0.5.3",
     "request" : ">=2.88.0",
-    "request-promise-native" : ">=1.0.8"
+    "request-promise-native" : ">=1.0.8",
+    "chalk": ">=3.0.0",
+    "hap-nodejs": ">=0.5.3"
   }
 }
