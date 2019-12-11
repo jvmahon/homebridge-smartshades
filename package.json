@@ -1,8 +1,7 @@
 {
   "name": "NEO Smart Shade Control",
   "version": "0.0.1",
-  "description": "NEO Smart Plugin for homebridge: https://github.com/jvmahon/NEOSmartShades",
-  "license": "ISC",
+  "description": "NEO Smart Plugin for homebridge",
   "keywords": [
     "homebridge-plugin",
     "homebridge-NEOSmart"
