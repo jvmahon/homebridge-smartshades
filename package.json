@@ -1,6 +1,7 @@
 {
   "name": "NEO Smart Shade Control",
   "version": "0.0.1",
+  "main":"ShadeControl.js",
   "description": "NEO Smart Plugin for homebridge: https://github.com/jvmahon/NEOSmartShades",
   "license": "ISC",
   "keywords": [
