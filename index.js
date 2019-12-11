@@ -28,10 +28,10 @@ module.exports = function (homebridge) {
 
     // For platform plugin to be considered as dynamic platform plugin,
     // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
-    homebridge.registerPlatform("smartshades", "smartshades", NEOSmartPlatform, true);
+    homebridge.registerPlatform("homebridge-smartshadeplatform", "smartshadeplatform", smartshadeplatform, true);
 }
 
-function NEOSmartPlatform(log, config, api) {
+function smartshadeplatform(log, config, api) {
 
 	if(!config) return([]);
 
@@ -45,7 +45,7 @@ function NEOSmartPlatform(log, config, api) {
 }
 
 
-NEOSmartPlatform.prototype = 
+smartshadeplatform.prototype = 
 {
     accessories: function (callback) 
 	{
