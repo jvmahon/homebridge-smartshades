@@ -1,18 +1,17 @@
 {
   "name": "homebridge-smartshades",
-  "version": "0.0.4",
+  "version": "0.0.1",
   "description": "NEO SmartShades Plugin for homebridge: https://github.com/jvmahon/homebridge-smartshades",
   "license": "ISC",
   "keywords": [
     "homebridge-plugin",
-    "homebridge-homeseer",
-    "homebridge-homeseer4",
-    "Homebridge-HomeSeer 4"
+    "homebridge-smartshades",
+    "homebridge-NEOSmartShades"
   ],
-  "repository": "github:jvmahon/homebridge-homeseer4",
+  "repository": "github:jvmahon/homebridge-smartshades",
   
   "bugs": {
-    "url": "https://github.com/jvmahon/homebridge-homeseer4/issues"
+    "url": "https://github.com/jvmahon/homebridge-smartshades/issues"
   },
   "engines": {
     "node": ">=12.0.0",
