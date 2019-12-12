@@ -2,18 +2,14 @@
 var net = require('net');
 var promiseHTTP = require("request-promise-native");
 var chalk = require("chalk");
-var green = chalk.green.bold;
-var red = chalk.red.bold;
-var yellow = chalk.yellow.bold;
-var cyan = chalk.cyan.bold;
-var magenta = chalk.magenta.bold;
-		
+			
 
 var exports = module.exports;
-var globals = []
-globals.log = console.log;
-																																		
+var globals = [];																																	
 module.exports.globals = globals;
+
+var Accessory, Service, Characteristic, UUIDGen;
+	
 
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
@@ -26,68 +22,84 @@ module.exports = function (homebridge) {
     Characteristic = homebridge.hap.Characteristic;
     UUIDGen = homebridge.hap.uuid;
 
-    // For platform plugin to be considered as dynamic platform plugin,
-    // registerPlatform(pluginName, platformName, constructor, dynamic), dynamic must be true
-    homebridge.registerPlatform("homebridge-smartshadeplatform", "smartshadeplatform", smartshadeplatform, true);
+    homebridge.registerPlatform("homebridge-NEOShadePlatform", "NEOShades", NEOShadePlatform, true);
 }
 
-function smartshadeplatform(log, config, api) {
 
-	if(!config) return([]);
+
+function NEOShadePlatform(log, config, api) {
+
+	// if(!config) return([]);
 
 	this.log = log;
     this.config = config;
+			console.log("config:" + JSON.stringify(this.config) );
+
 
 		globals.log = log; 
-		globals.platformConfig = config; // Platform variables from config.json
-		
+		globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
 		globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
 }
 
 
-smartshadeplatform.prototype = 
+NEOShadePlatform.prototype = 
 {
     accessories: function (callback) 
 	{
         var foundAccessories = [];
 		var that = this;
 
-		globals.log("Configuring NEOSmartPlatform");
-		for (var currentAccessory of globals.platformConfig.accessories) {
+		globals.log("Configuring NEOSmartPlatform:");
+		for (var currentAccessory of this.config.accessories) {
 			// Find the index into the array of all of the HomeSeer devices
+		globals.log("CurrentAccessory is:" + currentAccessory);
 
 				try 
 				{
-					var accessory = new NEOSmartAccessory(that.log, that.config, currentAccessory, thisDevice);
-				} catch(err) 
+					var accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory);
+				} catch(error) 
 					{
-					let err = red( "** Error ** creating new NEO Smart Shade in file index.js."); 
+					let err = chalk.red( "** Error ** creating new NEO Smart Shade in file index.js."); 
 					
 					throw err
 				}			
 			foundAccessories.push(accessory);
 		} //endfor.
+		
+		globals.log("Executing Callback");
+
 		callback(foundAccessories);
 	}
 }
 
 
-function NEOSmartAccessory(log, platformConfig, currentAccessoryConfig, status) {
-    this.config = currentAccessoryConfig;
-    
-	this.uuid_base = this.config.uuid_base;
 
-    var that = this; // May be unused?
+
+function HomeSeerAccessory(log, platformConfig, accessoryConfig) {
+    this.config = accessoryConfig;
+
+    this.name = accessoryConfig.name
+    this.model = "Not Specified";
+    
+	this.uuid_base = Math.round (Math.random() * 1000);
+	
+
 
 }
 
-NEOSmartAccessory.prototype = {
+
+
+
+HomeSeerAccessory.prototype = {
 
     identify: function (callback) {
         callback();
     },
 
     getServices: function () {
+		
+		globals.log(chalk.red("Called HomeSeerAccessory.prototype"));
+				
 				
         var services = [];
 
@@ -100,8 +112,11 @@ NEOSmartAccessory.prototype = {
     }
 }
 
-setupShadeServices = function (that, services)
+
+var setupShadeServices = function (that, services)
 {
+			globals.log(chalk.red("Called setupShadeServices"));
+
 
 	let Characteristic 	= globals.api.hap.Characteristic;
 	let Service 		= globals.api.hap.Service;
@@ -115,7 +130,7 @@ setupShadeServices = function (that, services)
 		.setCharacteristic(Characteristic.Name, that.config.name )
 		.setCharacteristic(Characteristic.SerialNumber, Math.round((Math.random() * 1000000) )); //  For now, generate a random serial number!
 	
-	thisService = new Service.WindowCovering()
+	var thisService = new Service.WindowCovering()
 	
 	thisService.getCharacteristic(Characteristic.CurrentPosition).setProps({maxValue:2})
 	thisService.getCharacteristic(Characteristic.TargetPosition).setProps({maxValue:2})	
@@ -124,7 +139,7 @@ setupShadeServices = function (that, services)
 	thisService.getCharacteristic(Characteristic.TargetPosition)
 			.on('set', function(value, callback, context)
 			{
-				globals.log(yellow("*Debug* - TargetPosition value is : " + value));
+				globals.log(chalk.yellow("*Debug* - TargetPosition value is : " + value));
 				
 				callback(null);
 
@@ -135,6 +150,10 @@ setupShadeServices = function (that, services)
 			
 }
 
+			
 
+module.exports.platform = NEOShadePlatform;
+
+////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
 
 
