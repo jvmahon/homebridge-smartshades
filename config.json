@@ -1,31 +1,30 @@
 {
     "bridge": 
 	{
-        "name": "HomeBridge-Testing",
-        "username": "CD:22:3D:E3:CE:41",
-        "port": 51830,
-        "pin": "123-45-678"
+        "name": "Development Setup",
+        "username": "CD:22:3D:E3:CE:43",
+        "port": 51839,
+        "pin": "234-56-789"
     },
     
-    "description": "Home Miscellaneous",
+    "description": "Home Testing Bridge",
 
-    "platforms": [
-	  	
-    {
-		"platform": "NEOSmart",              
-		"name": "NEOSmart",                 
-		"host": "http://192.168.1.1:80",
+	"platforms":
+	  [	
+			{
+				"platform": "NEOShades",              
+				"name": "NEOShades",                 
 
-		
-
-		"accessories": 
-		[
-		{"type":"Shade" , "name":"Living Room"},
-		{"type":"Shade" , "name":"Kitchen"}
+				
+				"accessories": [ 
+				{"name":"Shade1", "data":"stuff"},
+				{"name":"Shade2", "data":"stuff"},
+				{"name":"Shade3", "data":"stuff"}
+				]
+								
+				
+			}
 		]
-
-    }
-  ]
 }
 
 
