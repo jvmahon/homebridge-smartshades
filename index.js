@@ -50,19 +50,21 @@ NEOShadePlatform.prototype =
 		var that = this;
 
 		globals.log("Configuring NEOSmartPlatform:");
-		for (var currentAccessory of this.config.accessories) {
+		for (var currentShade of this.config.shades) {
 			// Find the index into the array of all of the HomeSeer devices
-		globals.log("CurrentAccessory is:" + currentAccessory);
+		globals.log("currentShade is:" + JSON.stringify(currentShade));
 
 				try 
 				{
-					var accessory = new HomeSeerAccessory(that.log, that.config, currentAccessory);
+					var accessory = new HomeSeerAccessory(that.log, that.config, currentShade);
 				} catch(error) 
 					{
-					let err = chalk.red( "** Error ** creating new NEO Smart Shade in file index.js."); 
+					console.log(chalk.red( "** Error ** creating new NEO Smart Shade in file index.js.")); 
 					
-					throw err
-				}			
+					throw error
+				}	
+
+				
 			foundAccessories.push(accessory);
 		} //endfor.
 		
@@ -75,15 +77,12 @@ NEOShadePlatform.prototype =
 
 
 
-function HomeSeerAccessory(log, platformConfig, accessoryConfig) {
-    this.config = accessoryConfig;
-
-    this.name = accessoryConfig.name
+function HomeSeerAccessory(log, platformConfig, currentShade) {
+    this.config = currentShade;
+	this.platformConfig = platformConfig
+    this.name = currentShade.name
     this.model = "Not Specified";
-    
-	this.uuid_base = Math.round (Math.random() * 1000);
-	
-
+	this.uuid_base = currentShade.code;
 
 }
 
@@ -97,15 +96,10 @@ HomeSeerAccessory.prototype = {
     },
 
     getServices: function () {
-		
-		globals.log(chalk.red("Called HomeSeerAccessory.prototype"));
-				
-				
+	
         var services = [];
 
 		// The following function gets all the services for a device and returns them in the array 'services' 
-		// and also populates the 'globals.statusObjects' array with the Characteristics that need to be updated
-		// when polling HomeSeer
 		setupShadeServices(this, services);
 	
         return services;
@@ -132,15 +126,101 @@ var setupShadeServices = function (that, services)
 	
 	var thisService = new Service.WindowCovering()
 	
-	thisService.getCharacteristic(Characteristic.CurrentPosition).setProps({maxValue:2})
-	thisService.getCharacteristic(Characteristic.TargetPosition).setProps({maxValue:2})	
-		
+	var currentPosition = thisService.getCharacteristic(Characteristic.CurrentPosition)
+	var targetPosition = thisService.getCharacteristic(Characteristic.TargetPosition)
 	
-	thisService.getCharacteristic(Characteristic.TargetPosition)
+	currentPosition.setProps({maxValue:2})
+	targetPosition.setProps({maxValue:2})	
+	currentPosition.value = 1;
+	targetPosition.value = 1;
+	
+		
+	var upURL = new URL (that.platformConfig.host);	
+		upURL.port = 8838;
+		upURL.pathname = "neo/v1/transmit";
+		upURL.searchParams.set("command", that.config.code + "-up")
+		upURL.searchParams.append("id", that.platformConfig.controllerID)
+		// upURL.searchParams.append("hash", "1234567");
+		
+	var downURL = new URL (that.platformConfig.host);	
+		downURL.port = 8838;
+		downURL.pathname = "neo/v1/transmit";
+		downURL.searchParams.set("command", that.config.code + "-dn")
+		downURL.searchParams.append("id", that.platformConfig.controllerID)
+		// downURL.searchParams.append("hash", "1234567");	
+	
+	
+	targetPosition
 			.on('set', function(value, callback, context)
 			{
-				globals.log(chalk.yellow("*Debug* - TargetPosition value is : " + value));
-				
+	
+				switch(value)
+				{
+					case 0: // Close the Shade!
+					{
+							var send = promiseHTTP({uri:downURL.href})
+							.then( function(result) 
+								{
+									// Movement takes about 15 seconds, so after that, tell HomeKit the currentPosition is now 'down'
+									setTimeout( function(){
+										currentPosition.updateValue(0)
+									}, 15000);
+								}
+							)
+							.catch(function(error) 
+								{
+									globals.log(chalk.red("*error* - Closing Shade - Error value is : " + error));
+								}
+							)
+							.finally( ()=>
+								{
+								// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
+										setTimeout( function(){
+										targetPosition.updateValue(1);
+										currentPosition.updateValue(1)
+									}, 20000);
+								}
+							)
+							
+							
+						break;
+					}
+					case 1:
+					{
+						break;
+					}
+					case 2: // Open the shade
+					{
+							var send = promiseHTTP({uri:upURL.href})
+							.then( function(result) 
+								{
+									// Movement takes about 15 seconds, so after that, tell HomeKit the currentPosition is now 'up'
+									setTimeout( function(){
+										currentPosition.updateValue(2)
+									}, 15000);
+								}
+							)
+							.catch(function(error) 
+								{
+									globals.log(chalk.red("*error* - Opening Shade - Error value is : " + error));
+								}
+							)
+							.finally( ()=>
+								{
+									// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
+										setTimeout( function(){
+										targetPosition.updateValue(1);
+										currentPosition.updateValue(1)
+									}, 20000);
+								}
+							)
+						break;
+					}
+					default:
+					{
+					}
+				}
+
 				callback(null);
 
 			} );		
@@ -149,8 +229,6 @@ var setupShadeServices = function (that, services)
 	services.push(informationService);
 			
 }
-
-			
 
 module.exports.platform = NEOShadePlatform;
 
