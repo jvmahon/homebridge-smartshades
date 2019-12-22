@@ -9,6 +9,8 @@ var globals = [];
 module.exports.globals = globals;
 
 var Accessory, Service, Characteristic, UUIDGen;
+
+var lastSent = new Date();
 	
 
 module.exports = function (homebridge) {
@@ -153,11 +155,20 @@ var setupShadeServices = function (that, services)
 	targetPosition
 			.on('set', function(value, callback, context)
 			{
+				var now = new Date()
+				var timeSinceLastTransmit = now.getTime() - lastSent.getTime();
+				console.log(chalk.red("*Debug* - Time Since Last Transmit is: " + timeSinceLastTransmit));
+				if (timeSinceLastTransmit < 500) 
+				{
+					console.log(chalk.red("*Warning* - transmitting too fast. This plugin is still under development and a future update will include code to limit sending rate to no more than one transmit per 500 milliseconds. For now, plugin will attempt to complete action!"));
+				}
+				lastSent = new Date();
 	
 				switch(value)
 				{
 					case 0: // Close the Shade!
 					{
+						
 							var send = promiseHTTP({uri:downURL.href})
 							.then( function(result) 
 								{
