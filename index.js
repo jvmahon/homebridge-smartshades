@@ -10,7 +10,38 @@ module.exports.globals = globals;
 
 var Accessory, Service, Characteristic, UUIDGen;
 
-var lastSent = new Date();
+class SendQueue 
+{ 
+    // Array is used to implement a Queue 
+    constructor() 
+		{ 
+			this.transmitItems = []; 
+		} 
+                  
+	send(element) 
+		{     
+		
+			// adding element to the queue 
+			if (this.transmitItems.length == 0) // && last send time was more than 500 mSeconds ago!
+			{
+				// Send immediately if length was zero!
+				// set last sent time
+			}
+			else
+			{
+			this.transmitItems.push(element); 
+			}
+			
+			console.log(chalk.red("Queued item: " + element));
+		} 
+	isEmpty() 
+		{ 
+			// return true if the queue is empty. 
+			return this.transmitItems.length == 0; 
+		} 
+} 
+
+var transmitQueue = new SendQueue;
 	
 
 module.exports = function (homebridge) {
@@ -120,10 +151,10 @@ var setupShadeServices = function (that, services)
 	var currentPosition = thisService.getCharacteristic(Characteristic.CurrentPosition)
 	var targetPosition = thisService.getCharacteristic(Characteristic.TargetPosition)
 	
-	currentPosition.setProps({maxValue:2})
-	targetPosition.setProps({maxValue:2})	
-	currentPosition.value = 1;
-	targetPosition.value = 1;
+	// currentPosition.setProps({validValues: [0, 50, 100]})
+	// targetPosition.setProps({validValues:[0, 50, 100]})	
+	currentPosition.value = 50;
+	targetPosition.value = 50;
 	
 		
 	var upURL = new URL (that.platformConfig.host);	
@@ -144,19 +175,12 @@ var setupShadeServices = function (that, services)
 	targetPosition
 			.on('set', function(value, callback, context)
 			{
-				var now = new Date()
-				var timeSinceLastTransmit = now.getTime() - lastSent.getTime();
-				console.log(chalk.red("*Debug* - Time Since Last Transmit is: " + timeSinceLastTransmit));
-				if (timeSinceLastTransmit < 500) 
-				{
-					console.log(chalk.red("*Warning* - transmitting too fast. This plugin is still under development and a future update will include code to limit sending rate to no more than one transmit per 500 milliseconds. For now, plugin will attempt to complete action!"));
-				}
-				lastSent = new Date();
 	
 				switch(value)
 				{
 					case 0: // Close the Shade!
 					{
+						transmitQueue.send(downURL.href);
 						
 							var send = promiseHTTP({uri:downURL.href})
 							.then( function(result) 
@@ -176,8 +200,8 @@ var setupShadeServices = function (that, services)
 								{
 								// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
 										setTimeout( function(){
-										targetPosition.updateValue(1);
-										currentPosition.updateValue(1)
+										targetPosition.updateValue(50);
+										currentPosition.updateValue(50)
 									}, 20000);
 								}
 							)
@@ -185,18 +209,15 @@ var setupShadeServices = function (that, services)
 							
 						break;
 					}
-					case 1:
+					case 100: // Open the shade
 					{
-						break;
-					}
-					case 2: // Open the shade
-					{
+						transmitQueue.send(upURL.href);
 							var send = promiseHTTP({uri:upURL.href})
 							.then( function(result) 
 								{
 									// Movement takes about 15 seconds, so after that, tell HomeKit the currentPosition is now 'up'
 									setTimeout( function(){
-										currentPosition.updateValue(2)
+										currentPosition.updateValue(100)
 									}, 15000);
 								}
 							)
@@ -209,8 +230,8 @@ var setupShadeServices = function (that, services)
 								{
 									// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
 										setTimeout( function(){
-										targetPosition.updateValue(1);
-										currentPosition.updateValue(1)
+										targetPosition.updateValue(50);
+										currentPosition.updateValue(50)
 									}, 20000);
 								}
 							)
@@ -218,6 +239,7 @@ var setupShadeServices = function (that, services)
 					}
 					default:
 					{
+						
 					}
 				}
 
