@@ -35,12 +35,13 @@ function NEOShadePlatform(log, config, api) {
 
 	this.log = log;
     this.config = config;
-			console.log("config:" + JSON.stringify(this.config) );
+	
+	console.log("config:" + JSON.stringify(this.config) );
 
 
-		globals.log = log; 
-		globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
-		globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
+	globals.log = log; 
+	globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
+	globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
 }
 
 
@@ -54,29 +55,25 @@ NEOShadePlatform.prototype =
 		globals.log("Configuring NEOSmartPlatform:");
 		for (var currentShade of this.config.shades) {
 			// Find the index into the array of all of the HomeSeer devices
-		globals.log("currentShade is:" + JSON.stringify(currentShade));
+		globals.log("Setting up shade with config.json data set to:" + JSON.stringify(currentShade));
 
 				try 
 				{
 					var accessory = new HomeSeerAccessory(that.log, that.config, currentShade);
-				} catch(error) 
-					{
+				} 
+				catch(error) 
+				{
 					console.log(chalk.red( "** Error ** creating new NEO Smart Shade in file index.js.")); 
 					
 					throw error
 				}	
 
-				
 			foundAccessories.push(accessory);
 		} //endfor.
-		
-		globals.log("Executing Callback");
 
 		callback(foundAccessories);
 	}
 }
-
-
 
 
 function HomeSeerAccessory(log, platformConfig, currentShade) {
@@ -85,11 +82,7 @@ function HomeSeerAccessory(log, platformConfig, currentShade) {
     this.name = currentShade.name
     this.model = "Not Specified";
 	this.uuid_base = currentShade.code;
-
 }
-
-
-
 
 HomeSeerAccessory.prototype = {
 
@@ -101,7 +94,7 @@ HomeSeerAccessory.prototype = {
 	
         var services = [];
 
-		// The following function gets all the services for a device and returns them in the array 'services' 
+		// The following function sets up the HomeKit 'services' for particular shade and returns them in the array 'services'. 
 		setupShadeServices(this, services);
 	
         return services;
@@ -111,12 +104,8 @@ HomeSeerAccessory.prototype = {
 
 var setupShadeServices = function (that, services)
 {
-			globals.log(chalk.red("Called setupShadeServices"));
-
-
 	let Characteristic 	= globals.api.hap.Characteristic;
 	let Service 		= globals.api.hap.Service;
-
 	
 	// And add a basic Accessory Information service		
 	var informationService = new Service.AccessoryInformation();
@@ -124,7 +113,7 @@ var setupShadeServices = function (that, services)
 		.setCharacteristic(Characteristic.Manufacturer, "NEO Smart")
 		.setCharacteristic(Characteristic.Model, "Roller Shade")
 		.setCharacteristic(Characteristic.Name, that.config.name )
-		.setCharacteristic(Characteristic.SerialNumber, Math.round((Math.random() * 1000000) )); //  For now, generate a random serial number!
+		.setCharacteristic(Characteristic.SerialNumber, that.config.code )
 	
 	var thisService = new Service.WindowCovering()
 	
@@ -235,7 +224,52 @@ var setupShadeServices = function (that, services)
 				callback(null);
 
 			} );		
-
+	/*
+		currentPosition.on('get', function(callback, context) 
+		{ 
+		console.log(chalk.red("CurrentPosition.Get was called"));
+		
+				switch(currentPosition.value)
+				{
+					case 0:
+					{
+						callback(null, 0)
+						break;
+					}
+					case 1:
+					{
+						callback(null, 50)
+						break;
+					}
+					default:
+					{
+						callback (null, 100);
+					}
+				}
+		})
+		targetPosition.on('get', function(callback, context) 
+		{ 
+		console.log(chalk.red("targetPosition.Get was called"));
+		
+				switch(targetPosition.value)
+				{
+					case 0:
+					{
+						callback(null, 0)
+						break;
+					}
+					case 1:
+					{
+						callback(null, 50)
+						break;
+					}
+					default:
+					{
+						callback (null, 100);
+					}
+				}
+		})
+	*/
 	services.push(thisService);
 	services.push(informationService);
 			
