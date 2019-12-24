@@ -10,38 +10,6 @@ module.exports.globals = globals;
 
 var Accessory, Service, Characteristic, UUIDGen;
 
-class SendQueue 
-{ 
-    // Array is used to implement a Queue 
-    constructor() 
-		{ 
-			this.transmitItems = []; 
-		} 
-                  
-	send(element) 
-		{     
-		
-			// adding element to the queue 
-			if (this.transmitItems.length == 0) // && last send time was more than 500 mSeconds ago!
-			{
-				// Send immediately if length was zero!
-				// set last sent time
-			}
-			else
-			{
-			this.transmitItems.push(element); 
-			}
-			
-			console.log(chalk.red("Queued item: " + element));
-		} 
-	isEmpty() 
-		{ 
-			// return true if the queue is empty. 
-			return this.transmitItems.length == 0; 
-		} 
-} 
-
-var transmitQueue = new SendQueue;
 	
 
 module.exports = function (homebridge) {
@@ -180,7 +148,6 @@ var setupShadeServices = function (that, services)
 				{
 					case 0: // Close the Shade!
 					{
-						transmitQueue.send(downURL.href);
 						
 							var send = promiseHTTP({uri:downURL.href})
 							.then( function(result) 
@@ -199,7 +166,7 @@ var setupShadeServices = function (that, services)
 							.finally( ()=>
 								{
 								// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
-										setTimeout( function(){
+									setTimeout( function(){
 										targetPosition.updateValue(50);
 										currentPosition.updateValue(50)
 									}, 20000);
@@ -211,7 +178,6 @@ var setupShadeServices = function (that, services)
 					}
 					case 100: // Open the shade
 					{
-						transmitQueue.send(upURL.href);
 							var send = promiseHTTP({uri:upURL.href})
 							.then( function(result) 
 								{
@@ -229,7 +195,7 @@ var setupShadeServices = function (that, services)
 							.finally( ()=>
 								{
 									// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
-										setTimeout( function(){
+									setTimeout( function(){
 										targetPosition.updateValue(50);
 										currentPosition.updateValue(50)
 									}, 20000);
@@ -239,59 +205,15 @@ var setupShadeServices = function (that, services)
 					}
 					default:
 					{
-						
+						// Do nothing if a value 1-49, or 51-99 is selected!
+						console.log(chalk.red("*Debug* - You must slide window covering all the way up or down for anything to happen!"));
 					}
 				}
 
 				callback(null);
 
 			} );		
-	/*
-		currentPosition.on('get', function(callback, context) 
-		{ 
-		console.log(chalk.red("CurrentPosition.Get was called"));
-		
-				switch(currentPosition.value)
-				{
-					case 0:
-					{
-						callback(null, 0)
-						break;
-					}
-					case 1:
-					{
-						callback(null, 50)
-						break;
-					}
-					default:
-					{
-						callback (null, 100);
-					}
-				}
-		})
-		targetPosition.on('get', function(callback, context) 
-		{ 
-		console.log(chalk.red("targetPosition.Get was called"));
-		
-				switch(targetPosition.value)
-				{
-					case 0:
-					{
-						callback(null, 0)
-						break;
-					}
-					case 1:
-					{
-						callback(null, 50)
-						break;
-					}
-					default:
-					{
-						callback (null, 100);
-					}
-				}
-		})
-	*/
+
 	services.push(thisService);
 	services.push(informationService);
 			
