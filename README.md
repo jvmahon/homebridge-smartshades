@@ -55,7 +55,7 @@ The "code" part of this entry comes from the NEO Smart Blind app. Go to the "Adv
 
 
 ## F. Operation
-To be added . . .
+This plugin was designed for use with roller shades that have 1-way communication between the NEO controller and the shade. This means that the controller can instruct the shade to open or close, but it cannot track the position of the shade. That is, even though the shade has been instructed to open, another device (such as a hand-held remote) could change the shade position and the controller can't track this. In order to deal with this issue, I've designed the plugin so it is, effectively, stateless. That is, after a shade has been opened or closed from the iOS Home application, the Home application will show the shade as open or closed for about 20 seconds. After that, the shade is pictured as being at the 50% (half-way) position. I thought leaving the shade at 50% after an open or close operation better indicates that the controller does not really know if the shade is up or down.
 
 
 
