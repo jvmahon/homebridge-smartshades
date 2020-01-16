@@ -10,6 +10,49 @@ module.exports.globals = globals;
 
 var Accessory, Service, Characteristic, UUIDGen;
 
+// This is a crude attempt to avoid sending too fast. The NEO controller seems to have many errors if it receives http request too quickly.
+// solution is a simple monitoring loop - every 2 seconds, the loop checks the queue for anything to send. As a extra check, it won't send if the last report was not more than 1 second prior
+class SendQueue
+{
+	constructor()
+	{
+		this.lastSent = Date.now();
+		this.queued = [];
+
+		// Send no more than once per second
+		var timer = setInterval( ()=> {
+			if ((this.queued.length != 0) && ((Date.now() - this.lastSent) > 1000) )
+			{
+					var nextURL = this.queued.shift();
+					this.lastSent = Date.now();
+					
+					var that = this;
+					console.log(chalk.yellow("*Debug* Attempting URL: %s \n\t\tat time: %s"), nextURL.href, Date.now());
+
+					var send = promiseHTTP({uri:nextURL.href})
+					.then( function(result)
+					{
+						that.lastSent = Date.now();
+						console.log("Sent URL: %s \n\t\tat time: %s", nextURL.href, Date.now());
+					}
+					)
+					.catch( function(error)
+					{
+						console.log(chalk.red("*Error* code: " + error + ", when sending url: " + nextURL.href + ", at time: " + Date.now()));
+					});
+			}
+		}, 2000)
+	}
+	
+	
+	send(url)
+	{
+
+		this.queued.push(url);
+	}
+}
+
+var ShadeControl = new SendQueue;
 	
 
 module.exports = function (homebridge) {
@@ -148,59 +191,30 @@ var setupShadeServices = function (that, services)
 				{
 					case 0: // Close the Shade!
 					{
+						var hashValue = Date.now().toString().slice(-7);
 						
-							var send = promiseHTTP({uri:downURL.href})
-							.then( function(result) 
-								{
-									// Movement takes about 15 seconds, so after that, tell HomeKit the currentPosition is now 'down'
-									setTimeout( function(){
-										currentPosition.updateValue(0)
-									}, 15000);
-								}
-							)
-							.catch(function(error) 
-								{
-									globals.log(chalk.red("*error* - Closing Shade - Error value is : " + error));
-								}
-							)
-							.finally( ()=>
-								{
-								// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
-									setTimeout( function(){
-										targetPosition.updateValue(50);
-										currentPosition.updateValue(50)
-									}, 20000);
-								}
-							)
-							
-							
+						downURL.searchParams.append("hash", hashValue )
+						
+							var send = ShadeControl.send(downURL)
+							setTimeout( function(){
+								targetPosition.updateValue(50);
+								currentPosition.updateValue(50)
+							}, 20000);
+
 						break;
 					}
 					case 100: // Open the shade
 					{
-							var send = promiseHTTP({uri:upURL.href})
-							.then( function(result) 
-								{
-									// Movement takes about 15 seconds, so after that, tell HomeKit the currentPosition is now 'up'
-									setTimeout( function(){
-										currentPosition.updateValue(100)
-									}, 15000);
-								}
-							)
-							.catch(function(error) 
-								{
-									globals.log(chalk.red("*error* - Opening Shade - Error value is : " + error));
-								}
-							)
-							.finally( ()=>
-								{
-									// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
-									setTimeout( function(){
-										targetPosition.updateValue(50);
-										currentPosition.updateValue(50)
-									}, 20000);
-								}
-							)
+						var hashValue = Date.now().toString().slice(-7);
+						upURL.searchParams.append("hash", hashValue )
+						
+							var send = ShadeControl.send(upURL)
+							// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
+							setTimeout( function(){
+								targetPosition.updateValue(50);
+								currentPosition.updateValue(50)
+							}, 20000);
+
 						break;
 					}
 					default:
