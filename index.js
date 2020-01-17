@@ -1,6 +1,5 @@
 'use strict';
 var net = require('net');
-var promiseHTTP = require("request-promise-native");
 var chalk = require("chalk");
 			
 
@@ -18,33 +17,36 @@ class SendQueue
 	{
 		this.lastSent = Date.now();
 		this.queued = [];
+		this.initialized = false;
 
 		// Send no more than once per second
 		var timer = setInterval( ()=> {
-			if ((this.queued.length != 0) && ((Date.now() - this.lastSent) > 1000) )
+			if ((this.queued.length != 0) && ((Date.now() - this.lastSent) > 1000) && this.initialized)
 			{
-					var nextURL = this.queued.shift();
-					this.lastSent = Date.now();
-					
-					var that = this;
-					console.log(chalk.yellow("*Debug* Attempting URL: %s \n\t\tat time: %s"), nextURL.href, Date.now());
+				// console.log(chalk.yellow("*Debug* Attempting Command: %s \n\t\tat time since last send: %s"), nextCommand, (Date.now() - this.lastSent));
 
-					var send = promiseHTTP({uri:nextURL.href})
-					.then( function(result)
-					{
-						that.lastSent = Date.now();
-						console.log("Sent URL: %s \n\t\tat time: %s", nextURL.href, Date.now());
-					}
-					)
-					.catch( function(error)
-					{
-						console.log(chalk.red("*Error* code: " + error + ", when sending url: " + nextURL.href + ", at time: " + Date.now()));
-					});
+					var nextCommand = this.queued.shift();
+					this.lastSent = Date.now();
+					var telnetClient = net.createConnection({port:8839, host:this.host});
+
+					telnetClient.on("end", ()=> {console.log(chalk.red("Closed Connection after sending command: " + nextCommand)) });
+
+					telnetClient.on("connect", ()=> 
+						{
+							telnetClient.write(nextCommand +"\r", ()=> {console.log(chalk.green("Sent Command: " + nextCommand)) });
+							this.lastSent = Date.now();
+						});
+
 			}
-		}, 2000)
+		}, 500)
 	}
 	
-	
+	async initialize(platformHost)
+	{
+		this.host = platformHost;
+		this.initialized = true;
+		return Promise.resolve(true);;
+	}
 	send(url)
 	{
 
@@ -89,10 +91,11 @@ function NEOShadePlatform(log, config, api) {
 
 NEOShadePlatform.prototype = 
 {
-    accessories: function (callback) 
+    accessories: async function (callback) 
 	{
         var foundAccessories = [];
 		var that = this;
+		var getTestInfo =   await ShadeControl.initialize( globals.platformConfig["host"] );
 
 		globals.log("Configuring NEOSmartPlatform:");
 		for (var currentShade of this.config.shades) {
@@ -162,25 +165,9 @@ var setupShadeServices = function (that, services)
 	var currentPosition = thisService.getCharacteristic(Characteristic.CurrentPosition)
 	var targetPosition = thisService.getCharacteristic(Characteristic.TargetPosition)
 	
-	// currentPosition.setProps({validValues: [0, 50, 100]})
-	// targetPosition.setProps({validValues:[0, 50, 100]})	
 	currentPosition.value = 50;
 	targetPosition.value = 50;
 	
-		
-	var upURL = new URL (that.platformConfig.host);	
-		upURL.port = 8838;
-		upURL.pathname = "neo/v1/transmit";
-		upURL.searchParams.set("command", that.config.code + "-up")
-		upURL.searchParams.append("id", that.platformConfig.controllerID)
-		// upURL.searchParams.append("hash", "1234567");
-		
-	var downURL = new URL (that.platformConfig.host);	
-		downURL.port = 8838;
-		downURL.pathname = "neo/v1/transmit";
-		downURL.searchParams.set("command", that.config.code + "-dn")
-		downURL.searchParams.append("id", that.platformConfig.controllerID)
-		// downURL.searchParams.append("hash", "1234567");	
 	
 	
 	targetPosition
@@ -191,11 +178,8 @@ var setupShadeServices = function (that, services)
 				{
 					case 0: // Close the Shade!
 					{
-						var hashValue = Date.now().toString().slice(-7);
 						
-						downURL.searchParams.append("hash", hashValue )
-						
-							var send = ShadeControl.send(downURL)
+							var send = ShadeControl.send(that.config.code + "-dn")
 							setTimeout( function(){
 								targetPosition.updateValue(50);
 								currentPosition.updateValue(50)
@@ -205,10 +189,8 @@ var setupShadeServices = function (that, services)
 					}
 					case 100: // Open the shade
 					{
-						var hashValue = Date.now().toString().slice(-7);
-						upURL.searchParams.append("hash", hashValue )
-						
-							var send = ShadeControl.send(upURL)
+							var send = ShadeControl.send(that.config.code + "-up")
+
 							// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
 							setTimeout( function(){
 								targetPosition.updateValue(50);
