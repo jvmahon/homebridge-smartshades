@@ -1,6 +1,12 @@
 'use strict';
 var net = require('net');
 var chalk = require("chalk");
+const updateNotifier = require('update-notifier');
+
+
+// Checks for available update and returns an instance
+const notifier = updateNotifier({pkg}) // Notify using the built-in convenience method
+notifier.notify();	
 			
 
 var exports = module.exports;
@@ -33,7 +39,11 @@ class SendQueue
 
 					telnetClient.on("connect", ()=> 
 						{
-							telnetClient.write(nextCommand +"\r", ()=> {console.log(chalk.green("Sent Command: " + nextCommand)) });
+							telnetClient.write(nextCommand +"\r", ()=> 
+								{
+									
+									console.log(chalk.green("Sent Command: " + nextCommand +" at time: " + Date.toLocaleTimeString() )) 
+								});
 							this.lastSent = Date.now();
 						});
 
