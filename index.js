@@ -1,6 +1,7 @@
 'use strict';
 var net = require('net');
 var chalk = require("chalk");
+const pkg = require("./package.json");
 const updateNotifier = require('update-notifier');
 
 
@@ -27,7 +28,7 @@ class SendQueue
 
 		// Send no more than once per second
 		var timer = setInterval( ()=> {
-			if ((this.queued.length != 0) && ((Date.now() - this.lastSent) > 1000) && this.initialized)
+			if ((this.queued.length != 0) && ((Date.now() - this.lastSent) > 500) && this.initialized)
 			{
 				// console.log(chalk.yellow("*Debug* Attempting Command: %s \n\t\tat time since last send: %s"), nextCommand, (Date.now() - this.lastSent));
 
@@ -41,14 +42,14 @@ class SendQueue
 						{
 							telnetClient.write(nextCommand +"\r", ()=> 
 								{
-									
-									console.log(chalk.green("Sent Command: " + nextCommand +" at time: " + Date.toLocaleTimeString() )) 
+									var now = new Date();
+									console.log(chalk.green(`Sent Command: ${nextCommand} at time: ${now.toLocaleTimeString()}`)) 
 								});
 							this.lastSent = Date.now();
 						});
 
 			}
-		}, 500)
+		}, 250)
 	}
 	
 	async initialize(platformHost)
