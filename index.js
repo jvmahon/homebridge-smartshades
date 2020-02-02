@@ -3,6 +3,9 @@ var net = require('net');
 var chalk = require("chalk");
 const pkg = require("./package.json");
 const updateNotifier = require('update-notifier');
+const queue = require("queue");
+
+var sendQueue = queue({autostart:true, concurrency:1})
 
 
 // Checks for available update and returns an instance
@@ -16,57 +19,7 @@ module.exports.globals = globals;
 
 var Accessory, Service, Characteristic, UUIDGen;
 
-// This is a crude attempt to avoid sending too fast. The NEO controller seems to have many errors if it receives http request too quickly.
-// solution is a simple monitoring loop - every 2 seconds, the loop checks the queue for anything to send. As a extra check, it won't send if the last report was not more than 1 second prior
-class SendQueue
-{
-	constructor()
-	{
-		this.lastSent = Date.now();
-		this.queued = [];
-		this.initialized = false;
 
-		// Send no more than once per second
-		var timer = setInterval( ()=> {
-			if ((this.queued.length != 0) && ((Date.now() - this.lastSent) > 500) && this.initialized)
-			{
-				// console.log(chalk.yellow("*Debug* Attempting Command: %s \n\t\tat time since last send: %s"), nextCommand, (Date.now() - this.lastSent));
-
-					var nextCommand = this.queued.shift();
-					this.lastSent = Date.now();
-					var telnetClient = net.createConnection({port:8839, host:this.host});
-
-					telnetClient.on("end", ()=> {console.log(chalk.red("Closed Connection after sending command: " + nextCommand)) });
-
-					telnetClient.on("connect", ()=> 
-						{
-							telnetClient.write(nextCommand +"\r", ()=> 
-								{
-									var now = new Date();
-									console.log(chalk.green(`Sent Command: ${nextCommand} at time: ${now.toLocaleTimeString()}`)) 
-								});
-							this.lastSent = Date.now();
-						});
-
-			}
-		}, 250)
-	}
-	
-	async initialize(platformHost)
-	{
-		this.host = platformHost;
-		this.initialized = true;
-		return Promise.resolve(true);;
-	}
-	send(url)
-	{
-
-		this.queued.push(url);
-	}
-}
-
-var ShadeControl = new SendQueue;
-	
 
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
@@ -91,8 +44,6 @@ function NEOShadePlatform(log, config, api) {
 	this.log = log;
     this.config = config;
 	
-	console.log("config:" + JSON.stringify(this.config) );
-
 
 	globals.log = log; 
 	globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
@@ -106,7 +57,6 @@ NEOShadePlatform.prototype =
 	{
         var foundAccessories = [];
 		var that = this;
-		var getTestInfo =   await ShadeControl.initialize( globals.platformConfig["host"] );
 
 		globals.log("Configuring NEOSmartPlatform:");
 		for (var currentShade of this.config.shades) {
@@ -160,6 +110,24 @@ HomeSeerAccessory.prototype = {
 
 var setupShadeServices = function (that, services)
 {
+	
+	function send(command)
+		{
+			function sendfunction(cb)
+			{
+				var telnetClient = net.createConnection(8839, that.platformConfig.host, ()=> 
+					{
+						telnetClient.write(command +"\r", ()=> 
+							{
+								var now = new Date();
+								console.log(chalk.green(`Sent Command: ${command} at time: ${now.toLocaleTimeString()}`)) 
+								setTimeout( ()=> {cb()}, 500);
+							});
+					});
+			}
+			sendQueue.push(sendfunction)
+		}
+
 	let Characteristic 	= globals.api.hap.Characteristic;
 	let Service 		= globals.api.hap.Service;
 	
@@ -190,23 +158,23 @@ var setupShadeServices = function (that, services)
 					case 0: // Close the Shade!
 					{
 						
-							var send = ShadeControl.send(that.config.code + "-dn")
+							send(that.config.code + "-dn")
 							setTimeout( function(){
 								targetPosition.updateValue(50);
 								currentPosition.updateValue(50)
-							}, 20000);
+							}, 25000);
 
 						break;
 					}
 					case 100: // Open the shade
 					{
-							var send = ShadeControl.send(that.config.code + "-up")
+							send(that.config.code + "-up")
 
 							// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
 							setTimeout( function(){
 								targetPosition.updateValue(50);
 								currentPosition.updateValue(50)
-							}, 20000);
+							}, 25000);
 
 						break;
 					}
