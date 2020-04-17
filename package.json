@@ -1,6 +1,6 @@
 {
   "name": "homebridge-smartshades",
-  "version": "0.0.5",
+  "version": "0.0.56",
   "description": "NEO SmartShades Plugin for homebridge: https://github.com/jvmahon/homebridge-smartshades",
   "license": "ISC",
   "keywords": [
@@ -19,9 +19,9 @@
     "homebridge": ">=0.4.50"
   },
   "dependencies": {
-    "chalk": ">=3.0.0",
-    "hap-nodejs": ">=0.5.3",
-    "update-notifier": ">=4.0.0",
+    "chalk": ">=4.0.0",
+    "hap-nodejs": ">=0.6.0",
+    "update-notifier": ">=4.1.0",
     "queue": ">=6.0.0"
   }
 }
