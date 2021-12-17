@@ -8,7 +8,8 @@
         "required": [
             "name",
             "host",
-			"controllerID"
+			"controllerID",
+			"platform",
         ],
         "type": "object",
         "properties": {
@@ -16,6 +17,12 @@
                 "default": "NEOShades",
                 "description": "Leave this as NEOShades",
                 "title": "Name",
+                "type": "string"
+            },            
+			"platform": {
+                "default": "NEOShades",
+                "description": "Leave this as NEOShades",
+                "title": "Platform",
                 "type": "string"
             },
             "host": {
