@@ -7,19 +7,15 @@ const queue = require("queue");
 
 var sendQueue = queue({autostart:true, concurrency:1})
 
-
 // Checks for available update and returns an instance
 const notifier = updateNotifier({pkg}) // Notify using the built-in convenience method
 notifier.notify();	
-			
-
+		
 var exports = module.exports;
 var globals = [];																																	
 module.exports.globals = globals;
 
 var Accessory, Service, Characteristic, UUIDGen;
-
-
 
 module.exports = function (homebridge) {
     console.log("homebridge API version: " + homebridge.version);
@@ -36,17 +32,12 @@ module.exports = function (homebridge) {
 }
 
 
-
 function NEOShadePlatform(log, config, api) {
-
-	// if(!config) return([]);
-
 	this.log = log;
     this.config = config;
-	
 
 	globals.log = log; 
-	globals.platformConfig = config; // Platform variables from config.json:  platform, name, host, temperatureScale, lightbulbs, thermostats, events, accessories
+	globals.platformConfig = config; // Platform variables from config.json
 	globals.api = api; // _accessories, _platforms, _configurableAccessories, _dynamicPlatforms, version, serverVersion, user, hap, hapLegacyTypes,platformAccessory,_events, _eventsCount
 }
 
@@ -60,17 +51,13 @@ NEOShadePlatform.prototype =
 
 		globals.log("Configuring NEOSmartPlatform:");
 		for (var currentShade of this.config.shades) {
-			// Find the index into the array of all of the HomeSeer devices
+			// Find the index into the array of all of the NEOShade devices
 		globals.log("Setting up shade with config.json data set to:" + JSON.stringify(currentShade));
 
-				try 
-				{
-					var accessory = new HomeSeerAccessory(that.log, that.config, currentShade);
-				} 
-				catch(error) 
-				{
+				try  {
+					var accessory = new NEOShadeAccessory(that.log, that.config, currentShade);
+				} catch(error) {
 					console.log(chalk.red( "** Error ** creating new NEO Smart Shade in file index.js.")); 
-					
 					throw error
 				}	
 
@@ -82,7 +69,7 @@ NEOShadePlatform.prototype =
 }
 
 
-function HomeSeerAccessory(log, platformConfig, currentShade) {
+function NEOShadeAccessory(log, platformConfig, currentShade) {
     this.config = currentShade;
 	this.platformConfig = platformConfig
     this.name = currentShade.name
@@ -90,27 +77,22 @@ function HomeSeerAccessory(log, platformConfig, currentShade) {
 	this.uuid_base = currentShade.code;
 }
 
-HomeSeerAccessory.prototype = {
+NEOShadeAccessory.prototype = {
 
     identify: function (callback) {
         callback();
     },
 
     getServices: function () {
-	
         var services = [];
-
 		// The following function sets up the HomeKit 'services' for particular shade and returns them in the array 'services'. 
 		setupShadeServices(this, services);
-	
         return services;
     }
 }
 
-
 var setupShadeServices = function (that, services)
 {
-	
 	function send(command)
 		{
 			function sendfunction(cb)
@@ -147,51 +129,43 @@ var setupShadeServices = function (that, services)
 	currentPosition.value = 50;
 	targetPosition.value = 50;
 	
-	
-	
 	targetPosition
-			.on('set', function(value, callback, context)
+		.on('set', function(value, callback, context) {
+			switch(value)
 			{
-	
-				switch(value)
+				case 0: // Close the Shade!
 				{
-					case 0: // Close the Shade!
-					{
-						
-							send(that.config.code + "-dn")
-							setTimeout( function(){
-								targetPosition.updateValue(50);
-								currentPosition.updateValue(50)
-							}, 25000);
+					send(that.config.code + "-dn")
+					setTimeout( function(){
+						targetPosition.updateValue(50);
+						currentPosition.updateValue(50)
+					}, 25000);
 
-						break;
-					}
-					case 100: // Open the shade
-					{
-							send(that.config.code + "-up")
-
-							// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
-							setTimeout( function(){
-								targetPosition.updateValue(50);
-								currentPosition.updateValue(50)
-							}, 25000);
-
-						break;
-					}
-					default:
-					{
-						// Do nothing if a value 1-49, or 51-99 is selected!
-						console.log(chalk.red("*Debug* - You must slide window covering all the way up or down for anything to happen!"));
-					}
+					break;
 				}
+				case 100: // Open the shade
+				{
+					send(that.config.code + "-up")
 
-				callback(null);
+					// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
+					setTimeout( function(){
+						targetPosition.updateValue(50);
+						currentPosition.updateValue(50)
+					}, 25000);
 
-			} );		
+					break;
+				}
+				default:
+				{
+					// Do nothing if a value 1-49, or 51-99 is selected!
+					console.log(chalk.red("*Debug* - You must slide window covering all the way up or down for anything to happen!"));
+				}
+			}
+			callback(null);
+		} );		
 
 	services.push(thisService);
 	services.push(informationService);
-			
 }
 
 module.exports.platform = NEOShadePlatform;
