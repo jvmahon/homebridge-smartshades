@@ -195,7 +195,3 @@ var setupShadeServices = function (that, services)
 }
 
 module.exports.platform = NEOShadePlatform;
-
-////////////////////    End of Polling HomeSeer Code    /////////////////////////////		
-
-
