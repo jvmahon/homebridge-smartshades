@@ -1,0 +1,48 @@
+{
+	"pluginAlias": "Smartshades",
+	"pluginType": "platform",
+	"singular": true,
+	"headerDisplay": "Use the settings below to configure the Homebridge-Smartshades Plugin. Changes are not applied until you click save at the bottom and restart Homebridge by clicking the power button in the main menu bar. Recommend clicking the \"Config\" button in the main menu bar to verify all values were entered properly.",
+	"footerDisplay": "For help please see the plugin [readme](https://github.com/jvmahon/homebridge-smartshades/).",
+    "schema": {
+        "required": [
+            "name",
+            "host",
+			"controllerID"
+        ],
+        "type": "object",
+        "properties": {
+            "name": {
+                "default": "NEOShades",
+                "description": "Leave this as NEOShades",
+                "title": "Name",
+                "type": "string"
+            },
+            "host": {
+                "default": "0.0.0.0",
+                "description": "Copy and Paste here the controller IP address",
+                "title": "Host IP Address",
+                "type": "string"
+            },
+            "controllerID": {
+                "description": "Copy and Paste here the controller ID",
+                "title": "NEO Smart Blinds Controller ID",
+                "type": "string"
+            },
+			"shades":{
+				"title":"Shade Information",
+				"type":"array",
+				"required":true,
+				"items":{
+					"title":"Shades",
+					"type":"object",
+					"properties": {
+						"name": { "title": "Name of the Window Blind", "type": "string" },
+						"code": { "title": "Blind Code", "type": "string" }
+					}
+				}
+			}
+		}
+	}
+}
+
