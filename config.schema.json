@@ -1,0 +1,52 @@
+{
+	"pluginAlias": "NEOShades",
+	"pluginType": "platform",
+	"singular": true,
+	"headerDisplay": "Use the settings below to configure the Homebridge-SmartShades Plugin. Changes are not applied until you click save at the bottom and restart Homebridge by clicking the power button in the main menu bar. Recommend clicking the \"Config\" button in the main menu bar to verify all values were entered properly.",
+	"footerDisplay": "For help please see the plugin [readme](https://github.com/jvmahon/homebridge-smartshades/).",
+    "schema": {
+        "required": [
+            "name",
+            "host",
+			"controllerID"
+        ],
+        "type": "object",
+        "properties": {
+            "name": {
+                "default": "NEOShades",
+                "description": "Leave this as NEOShades",
+                "title": "Name",
+                "type": "string"
+            },
+            "host": {
+                "default": "127.0.0.1",
+                "description": "Enter the IP address of the NEO Smart Shades controller",
+                "title": "NEO Smart Shades Controller IP",
+				"format": "url",
+                "type": "string"
+            },
+            "controllerID": {
+                "description": "NEO Shades Controller ID",
+                "title": "NEO Shades Controller ID",
+                "type": "string"
+            },
+			"shades":{
+				"type":"array",
+				"items":{
+					"type": "object",
+					"properties": {
+                        "name": {
+                            "type": "string"
+                        },
+						"code": {
+                            "type": "string"
+                        }
+					}
+				}
+			}
+
+		}
+	}
+}
+
+
