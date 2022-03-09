@@ -40,7 +40,25 @@
                         },
 						"code": {
                             "type": "string"
-                        }
+                        },
+						"motorType": {
+							"title": "Motor Type",
+							"type": "string",
+							"required": true,
+							"default": "bf",
+							"oneOf": [
+									{ "title": "standard Bofu motor", "enum": ["bf"] },
+									{ "title": "vertical Bofu motor", "enum": ["vb"] },
+									{ "title": "top-down, bottom-up Bofu motor", "enum": ["tb"] },
+									{ "title": "NEO motor", "enum": ["no"] },
+									{ "title": "Nice motor", "enum": ["nc"] },
+									{ "title": "A-OK version 1 motor", "enum": ["k1"] },
+									{ "title": "A-OK version 1 motor", "enum": ["k2"] },
+									{ "title": "Dooya Unidirectional motor", "enum": ["dy"] },
+									{ "title": "Special Code Bofu Doya Motors", "enum": ["by"] },
+									{ "title": "Wistar and Alpha motors", "enum": ["wt"] }
+					]
+						}
 					}
 				}
 			}

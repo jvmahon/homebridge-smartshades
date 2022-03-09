@@ -135,7 +135,7 @@ var setupShadeServices = function (that, services)
 			{
 				case 0: // Close the Shade!
 				{
-					send(that.config.code + "-dn")
+					send(that.config.code + "-dn!" + (that.config.motorType ? that.config.motorType : "bf") )
 					setTimeout( function(){
 						targetPosition.updateValue(50);
 						currentPosition.updateValue(50)
@@ -145,7 +145,7 @@ var setupShadeServices = function (that, services)
 				}
 				case 100: // Open the shade
 				{
-					send(that.config.code + "-up")
+					send(that.config.code + "-up!" + (that.config.motorType ? that.config.motorType : "bf"))
 
 					// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
 					setTimeout( function(){
