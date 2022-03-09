@@ -20,13 +20,13 @@
             },
             "host": {
                 "default": "127.0.0.1",
-                "description": "Enter the IP address of the NEO Smart Shades controller",
-                "title": "NEO Smart Shades Controller IP",
+                "description": "Enter the IP address of the NEO Smart Shades controller. Find this in the NEO Smart Shades controller application on your phone",
+                "title": "NEO Smart Shades Controller IP.",
 				"format": "url",
                 "type": "string"
             },
             "controllerID": {
-                "description": "NEO Shades Controller ID",
+                "description": "NEO Shades Controller ID. Find this in the NEO Smart Shades controller application on your phone. It can be found from the NEO App menu under 'Smart Controllers' ",
                 "title": "NEO Shades Controller ID",
                 "type": "string"
             },
@@ -39,6 +39,7 @@
                             "type": "string"
                         },
 						"code": {
+							"description": "Blind or Room Code shown in the NEO Smart Shades Controller App. Code is a numeric string in the form 123.145-78", 
                             "type": "string"
                         },
 						"motorType": {
