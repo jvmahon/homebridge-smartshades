@@ -1,6 +1,6 @@
 {
   "name": "homebridge-smartshades",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "NEO SmartShades Plugin for homebridge: https://github.com/jvmahon/homebridge-smartshades",
   "license": "ISC",
   "keywords": [
