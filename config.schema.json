@@ -44,21 +44,22 @@
                         },
 						"motorType": {
 							"title": "Motor Type",
+							"description": "Select the Motor code show in the NEO Smart Shades Controller App on this particular shade's control page.",
 							"type": "string",
 							"required": true,
 							"default": "bf",
 							"oneOf": [
-									{ "title": "A-OK version 1 motor", "enum": ["k1"] },
-									{ "title": "A-OK version 1 motor", "enum": ["k2"] },
-									{ "title": "Bofu - standard motor", "enum": ["bf"] },
-									{ "title": "Bofu - top-down, bottom-up motor", "enum": ["tb"] },
-									{ "title": "Bofu - vertical motor", "enum": ["vb"] },
-									{ "title": "Dooya Unidirectional motor", "enum": ["dy"] },
-									{ "title": "NEO motor", "enum": ["no"] },
-									{ "title": "Nice motor", "enum": ["nc"] },
-									{ "title": "Raex motor", "enum": ["rx"] },
-									{ "title": "Special Code Bofu Doya Motors", "enum": ["by"] },
-									{ "title": "Wistar and Alpha motors", "enum": ["wt"] }
+									{ "title": "A-OK version 1 (Motor code: k1)", "enum": ["k1"] },
+									{ "title": "A-OK version 1 (Motor code: k2)", "enum": ["k2"] },
+									{ "title": "Bofu - standard (Motor code: bf)", "enum": ["bf"] },
+									{ "title": "Bofu - top-down, bottom-up (Motor code: tb)", "enum": ["tb"] },
+									{ "title": "Bofu - vertical (Motor code: vb)", "enum": ["vb"] },
+									{ "title": "Dooya Unidirectional (Motor code: dy)", "enum": ["dy"] },
+									{ "title": "NEO (Motor code: no)", "enum": ["no"] },
+									{ "title": "Nice (Motor code: nc)", "enum": ["nc"] },
+									{ "title": "Raex (Motor code: rx)", "enum": ["rx"] },
+									{ "title": "Special Code Bofu Doya (Motor code: by)", "enum": ["by"] },
+									{ "title": "Wistar and Alpha (Motor code: wt)", "enum": ["wt"] }
 								]
 						}
 					}
