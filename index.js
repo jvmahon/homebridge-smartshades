@@ -1,18 +1,12 @@
 'use strict';
 var net = require('net');
-var chalk = require("chalk");
 const pkg = require("./package.json");
-const updateNotifier = require('update-notifier');
 const queue = require("queue");
 
 var sendQueue = queue({autostart:true, concurrency:1})
-
-// Checks for available update and returns an instance
-const notifier = updateNotifier({pkg}) // Notify using the built-in convenience method
-notifier.notify();	
 		
 var exports = module.exports;
-var globals = [];																																	
+var globals = [];																																
 module.exports.globals = globals;
 
 var Accessory, Service, Characteristic, UUIDGen;
@@ -42,38 +36,35 @@ function NEOShadePlatform(log, config, api) {
 }
 
 
-NEOShadePlatform.prototype = 
-{
-    accessories: async function (callback) 
-	{
+NEOShadePlatform.prototype = {
+    accessories: async function (callback)  {
         var foundAccessories = [];
 		var that = this;
 
 		globals.log("Configuring NEOSmartPlatform:");
-		for (var currentShade of this.config.shades) {
-			// Find the index into the array of all of the NEOShade devices
-		globals.log("Setting up shade with config.json data set to:" + JSON.stringify(currentShade));
 
-				try  {
-					var accessory = new NEOShadeAccessory(that.log, that.config, currentShade);
-				} catch(error) {
-					console.log(chalk.red( "** Error ** creating new NEO Smart Shade in file index.js.")); 
-					throw error
-				}	
+		this.config?.shades?.forEach(currentShade => {
+			globals.log("Setting up shade with config.json data set to:" + JSON.stringify(currentShade));
+
+			try  {
+				var accessory = new NEOShadeAccessory(that.log, that.config, currentShade);
+			} catch(error) {
+				console.log( "** Error ** creating new NEO Smart Shade in file index.js."); 
+				throw error
+			}	
 
 			foundAccessories.push(accessory);
-		} //endfor.
+		})
 
 		callback(foundAccessories);
 	}
 }
 
-
 function NEOShadeAccessory(log, platformConfig, currentShade) {
     this.config = currentShade;
 	this.platformConfig = platformConfig
     this.name = currentShade.name
-    this.model = "Not Specified";
+    this.model = currentShade.motorType;
 	this.uuid_base = currentShade.code;
 }
 
@@ -93,23 +84,19 @@ NEOShadeAccessory.prototype = {
 
 var setupShadeServices = function (that, services)
 {
-	function send(command)
-		{
-			function sendfunction(cb)
-			{
-				var telnetClient = net.createConnection(8839, that.platformConfig.host, ()=> 
-					{
-						telnetClient.write(command +"\r", ()=> 
-							{
+	function send(command) {
+			function sendfunction(cb) {
+				var telnetClient = net.createConnection(8839, that.platformConfig.host, ()=>  {
+						telnetClient.write(command +"\r", ()=>  {
 								var now = new Date();
-								console.log(chalk.green(`Sent Command: ${command} at time: ${now.toLocaleTimeString()}`)) 
+								console.log(`Sent Command: ${command} at time: ${now.toLocaleTimeString()}`) 
 								setTimeout( ()=> {cb()}, 500);
 							});
 					});
 			}
 			sendQueue.push(sendfunction)
 		}
-
+	
 	let Characteristic 	= globals.api.hap.Characteristic;
 	let Service 		= globals.api.hap.Service;
 	
@@ -131,20 +118,15 @@ var setupShadeServices = function (that, services)
 	
 	targetPosition
 		.on('set', function(value, callback, context) {
-			switch(value)
-			{
+			switch(value) {
 				case 0: // Close the Shade!
-				{
 					send(that.config.code + "-dn!" + (that.config.motorType ? that.config.motorType : "bf") )
 					setTimeout( function(){
 						targetPosition.updateValue(50);
 						currentPosition.updateValue(50)
 					}, 25000);
-
 					break;
-				}
 				case 100: // Open the shade
-				{
 					send(that.config.code + "-up!" + (that.config.motorType ? that.config.motorType : "bf"))
 
 					// NEO controller doesn't detect actual position, reset shade after 20 seconds to show the user the shade is at half-position - i.e., neither up or down!
@@ -152,14 +134,11 @@ var setupShadeServices = function (that, services)
 						targetPosition.updateValue(50);
 						currentPosition.updateValue(50)
 					}, 25000);
-
 					break;
-				}
 				default:
-				{
 					// Do nothing if a value 1-49, or 51-99 is selected!
-					console.log(chalk.red("*Debug* - You must slide window covering all the way up or down for anything to happen!"));
-				}
+					console.log("*Debug* - You must slide window covering all the way up or down for anything to happen!");
+					break;
 			}
 			callback(null);
 		} );		
