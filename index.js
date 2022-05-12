@@ -25,7 +25,6 @@ module.exports = function (homebridge) {
     homebridge.registerPlatform("homebridge-NEOShadePlatform", "NEOShades", NEOShadePlatform, true);
 }
 
-
 function NEOShadePlatform(log, config, api) {
 	this.log = log;
     this.config = config;
