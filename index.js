@@ -125,6 +125,16 @@ var setupShadeServices = function (that, services)
 						currentPosition.updateValue(50)
 					}, 25000);
 					break;
+				case 24:
+				case 25:
+				case 26: // Move Shade to Favorite position!
+					send(that.config.code + "-gp" + (that.config.motorType ? that.config.motorType : "bf"))
+					setTimeout( function(){
+						targetPosition.updateValue(50);
+						currentPosition.updateValue(50)
+					}, 25000);
+					break					
+					
 				case 100: // Open the shade
 					send(that.config.code + "-up!" + (that.config.motorType ? that.config.motorType : "bf"))
 
@@ -135,8 +145,8 @@ var setupShadeServices = function (that, services)
 					}, 25000);
 					break;
 				default:
-					// Do nothing if a value 1-49, or 51-99 is selected!
-					console.log("*Debug* - You must slide window covering all the way up or down for anything to happen!");
+					// Do nothing if any ohter value is selected!
+					console.log("*Debug* - You must slide window covering all the way up or down or to 25% (favorite position) for anything to happen!");
 					break;
 			}
 			callback(null);
